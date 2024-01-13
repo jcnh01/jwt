@@ -2,8 +2,9 @@ package com.example.jwt.config;
 
 import com.example.jwt.config.auth.PrincipalDetailsService;
 import com.example.jwt.config.jwt.JwtAuthenticationFilter;
+import com.example.jwt.config.jwt.JwtAuthorizationFilter;
+import com.example.jwt.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -22,6 +23,7 @@ public class SecurityConfig {
 
     private final CorsConfig corsConfig;
     private final PrincipalDetailsService userDetailsService;
+    private final UserRepository userRepository;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -44,6 +46,7 @@ public class SecurityConfig {
 
         http.addFilter(corsConfig.corsFilter());
         http.addFilterBefore(new JwtAuthenticationFilter(authenticationManager), UsernamePasswordAuthenticationFilter.class);
+        http.addFilter(new JwtAuthorizationFilter(authenticationManager, userRepository));
 
         http.httpBasic(httpBasic ->
                 httpBasic.disable()
