@@ -1,5 +1,7 @@
 package com.example.jwt.config.jwt;
 
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.algorithms.Algorithm;
 import com.example.jwt.config.auth.PrincipalDetails;
 import com.example.jwt.config.dto.LoginRequestDto;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -15,6 +17,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import java.io.IOException;
+import java.util.Date;
 
 // 스프링 시큐리티에서 UsernamePasswordAuthenticationFilter가 있는데, /login 요청해서 username, password를 post로 전송하면
 // 이 필터가 동작을 한다.
@@ -60,6 +63,15 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
                                             Authentication authResult) throws IOException, ServletException {
 
         System.out.println("successfulAuthentication 실행 : 인증이 완료됨 ");
+        PrincipalDetails principalDetailis = (PrincipalDetails) authResult.getPrincipal();
 
+        String jwtToken = JWT.create()
+                .withSubject(principalDetailis.getUsername())
+                .withExpiresAt(new Date(System.currentTimeMillis() + JwtProperties.EXPIRATION_TIME)) // 만료시간
+                .withClaim("id", principalDetailis.getUser().getId())
+                .withClaim("username", principalDetailis.getUser().getUsername())
+                .sign(Algorithm.HMAC512(JwtProperties.SECRET)); // 알고리즘 서명
+
+        response.addHeader(JwtProperties.HEADER_STRING, JwtProperties.TOKEN_PREFIX+jwtToken);
     }
 }
